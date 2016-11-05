@@ -1,0 +1,10 @@
+Supervisor demo
+
+erlang shell:
+
+-> c(sup).
+-> c(basicS).
+-> sup:start_link().
+
+the supervisor starts three servers that will crash in 30~60 seconds
+be patient, things should start happening
