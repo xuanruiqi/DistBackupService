@@ -3,8 +3,8 @@
  
 start_server(Port) ->
 	Pid = spawn_link(fun() ->
-		{ok, Listen} = gen_tcp:listen(Port, [binary, {active, false}]),
-		spawn(fun() -> acceptor(Listen) end),
+		{ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}]),
+		spawn(fun() -> acceptor(ListenSocket) end),
 		timer:sleep(infinity)
 		end),
 	{ok, Pid}.
