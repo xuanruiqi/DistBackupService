@@ -3,6 +3,7 @@
  
 start_server(Port) ->
 	Pid = spawn_link(fun() ->
+		erlang:display("spawning listener.."),
 		{ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}]),
 		spawn(fun() -> acceptor(ListenSocket) end),
 		timer:sleep(infinity)
@@ -10,6 +11,7 @@ start_server(Port) ->
 	{ok, Pid}.
  
 acceptor(ListenSocket) ->
+	erlang:display("accepting ListenSocket.."),
 	{ok, Socket} = gen_tcp:accept(ListenSocket),
 	spawn(fun() -> acceptor(ListenSocket) end),
 	handle(Socket).
