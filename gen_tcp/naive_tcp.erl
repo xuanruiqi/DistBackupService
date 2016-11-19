@@ -11,8 +11,8 @@ start_server(Port) ->
 	{ok, Pid}.
  
 acceptor(ListenSocket) ->
-	erlang:display("accepting ListenSocket.."),
 	{ok, Socket} = gen_tcp:accept(ListenSocket),
+	erlang:display("connection made!"),
 	spawn(fun() -> acceptor(ListenSocket) end),
 	handle(Socket).
  
@@ -23,6 +23,7 @@ handle(Socket) ->
 		{tcp, Socket, <<"quit", _/binary>>} ->
 		gen_tcp:close(Socket);
 		{tcp, Socket, Msg} ->
+		erlang:display("message recieved!"),
 		gen_tcp:send(Socket, Msg),
 		handle(Socket)
 	end.

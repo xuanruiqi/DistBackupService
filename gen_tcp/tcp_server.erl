@@ -37,6 +37,11 @@ start_link() ->
 
 %%% client funs 
 
+% join network
+
+% send message to monitor saying "i'm here"
+% init server running on own node
+
 connect(IP_address, Port, Options) ->
 
 	{ok, Socket} = gen_tcp:connect(IP_address, Port, Options),
