@@ -27,8 +27,6 @@ handle_cast(accept, State = #state{socket=ListenSocket}) ->
 	erlang:display("connection received!"),
 	%% Boot a new listener to replace this one.
 	tcp_sup:start_socket(),
-	%% say hello
-	send(AcceptSocket, "Hello", []),
 	{noreply, State#state{socket=AcceptSocket}};
 handle_cast(_, State) ->
 	{noreply, State}.
@@ -36,6 +34,10 @@ handle_cast(_, State) ->
 handle_info({tcp, Socket, "quit"++_}, State) ->
 	gen_tcp:close(Socket),
 	{stop, normal, State};
+handle_info({tcp, Socket, "hello"}, State) ->
+	%% send back a greeting message
+	send(Socket, "why hello there!", []),
+	{noreply, State};
 handle_info({tcp, Socket, Msg}, State) ->
 	%% echo message
 	send(Socket, Msg, []),

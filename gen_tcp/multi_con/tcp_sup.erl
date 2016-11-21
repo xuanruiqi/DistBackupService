@@ -38,7 +38,7 @@ init([Port]) ->
 	{ok, ListenSocket} = gen_tcp:listen(Port, [{active, once}]),
 
 	%% We start our pool of empty listeners.
-	%% We must do this in another, as it is a blocking process.
+	%% We must do this in another proc, as it is a blocking process.
 
 	spawn_link(fun empty_listeners/0),
 
