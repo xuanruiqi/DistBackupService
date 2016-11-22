@@ -7,7 +7,7 @@
 
 connect(IP_address, Port) ->
 
-	{ok, Socket} = gen_tcp:connect(IP_address, Port, [{active, false}]),
+	{ok, Socket} = gen_tcp:connect(IP_address, Port, [binary, {packet, 4}, {active, false}]),
 	Socket.
 
 send(Socket, Msg) ->

@@ -14,7 +14,7 @@ start_link(Port) ->
 
 init([]) ->
 
-	{ok, ListenSocket} = gen_tcp:listen(?DEFAULT_PORT, [{active, false}, binary]),
+	{ok, ListenSocket} = gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]),
 
 	%% We start our pool of empty listeners.
 	%% We must do this in another, as it is a blocking process.
@@ -35,7 +35,7 @@ init([]) ->
 
 init([Port]) ->
 
-	{ok, ListenSocket} = gen_tcp:listen(Port, [{active, false}, binary]),
+	{ok, ListenSocket} = gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]),
 
 	%% We start our pool of empty listeners.
 	%% We must do this in another proc, as it is a blocking process.

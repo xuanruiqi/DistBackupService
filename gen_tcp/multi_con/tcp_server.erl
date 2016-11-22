@@ -29,24 +29,21 @@ handle_cast(accept, State = #state{socket=ListenSocket}) ->
 	erlang:display("connection received!"),
 	%% Boot a new listener to replace this one.
 	tcp_sup:start_socket(),
-	{ok,Bin} = do_recv(AcceptSocket, []),
-	io:fwrite("binary recieved~n", []),
-	io:fwrite("~s~n", [Bin]),
 	{noreply, State#state{socket=AcceptSocket}};
 handle_cast(_, State) ->
 	{noreply, State}.
 
-handle_info({tcp, Socket, "quit"++_}, State) ->
+handle_info({tcp, Socket, <<"quit", _/binary>>}, State) ->
 	gen_tcp:close(Socket),
 	{stop, normal, State};
-handle_info({tcp, Socket, "hello"}, State) ->
+handle_info({tcp, Socket, <<"hello", _/binary>>}, State) ->
 	%% send back a greeting message
 	send(Socket, "why hello there!", []),
 	{noreply, State};
-% handle_info({tcp, Socket, Packet}, State) ->
-% 	%% echo message
-% 	decode_packet(Packet),
-% 	{noreply, State};
+handle_info({tcp, Socket, Packet}, State) ->
+ 	%% echo message
+ 	decode_packet(Packet),
+ 	{noreply, State};
 handle_info({tcp_closed, _Socket}, State) -> {stop, normal, State};
 handle_info({tcp_error, _Socket, _}, State) -> {stop, normal, State};
 handle_info(E, State) ->
@@ -86,5 +83,5 @@ decode_packet(Packet) ->
 %% Send a message back to the client
 send(Socket, Str, Args) ->
   ok = gen_tcp:send(Socket, io_lib:format(Str++"~n", Args)),
-  ok = inet:setopts(Socket, [{active, once}]),
+  ok = inet:setopts(Socket, [{active, true}]),
   ok.
