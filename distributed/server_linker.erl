@@ -8,6 +8,8 @@ start_proxy(Node) ->
 
 	%ClientServ = proc_lib:spawn_opt(Node, tcp_sup, start_link, [], [monitor]),
 	ClientServ = proc_lib:spawn_link(Node, tcp_sup, start_link, []), 
-	
+
 	erlang:display(ClientServ),
-	erlang:display("Server spawned.").
+	erlang:display("Server spawned."),
+
+	timer:sleep(infinity).
