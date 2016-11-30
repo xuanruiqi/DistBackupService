@@ -50,7 +50,7 @@ handle_info({tcp, Socket, Packet}, State) ->
  	%% echo message
  	erlang:display("received packet from client"),
  	erlang:display(binary_to_term(Packet)),
- 	open_packet(binary_to_term(Packet)),
+ 	open_packet(Socket, binary_to_term(Packet)),
  	{noreply, State};
 handle_info({tcp_closed, _Socket}, State) -> {stop, normal, State};
 handle_info({tcp_error, _Socket, _}, State) -> {stop, normal, State};
@@ -62,12 +62,49 @@ handle_call(_E, _From, State) -> {noreply, State}.
 terminate(_Reason, _Tab) -> ok.
 code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 
-open_packet({join, ClientNode, ClientServPid, ClientIP, ClientPort}) ->
+open_packet(Socket, {join, ClientNode, ClientServPid, ClientIP, ClientPort}) ->
 
 	erlang:display("client wants to join!"),
 	MonitorListener = whereis(listener),
 
-	MonitorListener ! {connect, ClientNode, ClientServPid, ClientIP, ClientPort}.
+	MonitorListener ! {connect, ClientNode, ClientServPid, ClientIP, ClientPort};
+open_packet(Socket, {logout, ClientNode, ClientServPid}) ->
+
+	erlang:display("client wants to logout!"),
+	MonitorListener = whereis(listener),
+
+	MonitorListener ! {logout, ClientNode, ClientServPid};
+open_packet(Socket, {upload, ClientNode, ClientServPid, Hash}) ->
+
+	erlang:display("client wants init upload!"),
+
+	% TODO: write function called lookup_clients 
+	% to return list of tuples containing 
+	% every client's IP address and port number
+	% each element of the list  should look like: {IP_address, Port}
+	% Note: ClientNode's IP and Port should be excluded from this list
+
+	% TODO: uncomment the line below 
+	% Peers = lookup_clients()
+
+	% TODO: delete line below
+	Peers = [0],
+
+	% send Peers back to client
+	gen_tcp:send(Socket, term_to_binary(Peers));
+open_packet(Socket, {download, ClientNode, ClientServPid, Hash}) ->
+
+	erlang:display("client wants init download!"),
+
+	% TODO: uncomment the line below 
+	% Peers = lookup_clients()
+
+	% TODO: delete line below
+	Peers = [0],
+
+	% send Peers back to client
+	gen_tcp:send(Socket, term_to_binary(Peers)).
+
 
 decode_packet(Packet) -> 
 	io:fwrite("Decoding packet~n", []),
