@@ -47,7 +47,6 @@ handle_info({tcp, Socket, <<"hello", _/binary>>}, State) ->
 % 	decode_packet(Packet),
 % 	{noreply, State};
 handle_info({tcp, Socket, Packet}, State) ->
- 	%% echo message
  	erlang:display("received packet from client"),
  	erlang:display(binary_to_term(Packet)),
  	open_packet(Socket, binary_to_term(Packet)),

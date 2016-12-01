@@ -86,7 +86,7 @@ logout_client(client_left, ClientNode) ->
 
 	erlang:display("CLIENT REQUESTED LOGOUT: logging out client");
 
-	% TODO: write function to lookup ClientNode's ClientServPid in db
+	% TODO: write function to lookup ClientNode's MonitorRef in db
 	% MonitorRef = lookup_monitor_ref(ClientNode)
 
 	% TODO: write function to remove client from db

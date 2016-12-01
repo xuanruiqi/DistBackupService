@@ -83,9 +83,10 @@ init_upload(MonitorIP, MonitorPort, File) ->
 
 	gen_tcp:close(Socket), 
 
-	erlang:display(Peers).
+	erlang:display(Peers),
 
 	% call helper fun to upload File to every Peer in Peers
+	upload(FilePacket, Peers).
 
 init_download(MonitorIP, MonitorPort, File) ->
 	
@@ -107,7 +108,7 @@ init_download(MonitorIP, MonitorPort, File) ->
 	% build init_download request packet
 	Packet = term_to_binary({download, node(), ServPid, Hash}),
 
-	% send request to logout
+	% send request to init_download
 	gen_tcp:send(Socket, Packet),
 
 	% catch return value
@@ -118,9 +119,10 @@ init_download(MonitorIP, MonitorPort, File) ->
 
 	gen_tcp:close(Socket),
 
-	erlang:display(Peers).
+	erlang:display(Peers),
 
 	% call helper fun to download File from every Peer in Peers
+	download(Hash, Peers).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,3 +138,42 @@ connect(IP_address, Port) ->
 
 	{ok, Socket} = gen_tcp:connect(IP_address, Port, [binary, {packet, 4}, {active, false}]),
 	Socket.
+
+upload(FilePacket, Peers) ->
+
+	erlang:display("uploading file to my peers!"),
+
+	% parse file packet 
+	{Filename, Hash, Content} = parse_packet(FilePacket),
+
+	% build upload request packet
+	Packet = term_to_binary({upload, Filename, Hash, Content}).
+
+	% TODO: write loop that connects client to each Peer in Peers
+	% and sends Packet to each Peer
+
+download(Hash, Peers) ->
+
+	erlang:display("downloading my file from my peers!"),
+
+	% build download request packet
+	Packet = term_to_binary({download, Hash}).
+
+	% TODO: write loop that connects client to each Peer in Peers
+	% and sends Packet to each Peer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

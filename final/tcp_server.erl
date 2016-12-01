@@ -36,13 +36,15 @@ handle_cast(_, State) ->
 handle_info({tcp, Socket, <<"quit", _/binary>>}, State) ->
 	gen_tcp:close(Socket),
 	{stop, normal, State};
+%% test
 handle_info({tcp, Socket, <<"hello", _/binary>>}, State) ->
 	%% send back a greeting message
 	send(Socket, "why hello there!", []),
 	{noreply, State};
 handle_info({tcp, Socket, Packet}, State) ->
- 	%% echo message
- 	decode_packet(Packet),
+ 	erlang:display("received packet from client"),
+ 	erlang:display(binary_to_term(Packet)),
+ 	open_packet(Socket, binary_to_term(Packet)),
  	{noreply, State};
 handle_info({tcp_closed, _Socket}, State) -> {stop, normal, State};
 handle_info({tcp_error, _Socket, _}, State) -> {stop, normal, State};
@@ -55,14 +57,21 @@ terminate(_Reason, _Tab) -> ok.
 code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 
 
+open_packet(Socket, {upload, Filename, Hash, Content}) ->
 
-do_recv(Sock, Bs) ->
-    case gen_tcp:recv(Sock, 0) of
-        {ok, B} ->
-            do_recv(Sock, [Bs, B]);
-        {error, closed} ->
-            {ok, list_to_binary(Bs)}
-    end.
+	erlang:display("client wants upload his file!");
+
+	% TODO: write function to write file to a directory
+	% called peer_files
+
+open_packet(Socket, {download, Hash}) ->
+
+	erlang:display("client wants download his file!").
+
+	% TODO: write function to Hash each file in peer_files
+	% and return the file whose hash matches Hash
+
+	% TODO: send file to client
 
 
 
