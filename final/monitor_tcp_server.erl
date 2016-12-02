@@ -83,7 +83,7 @@ open_packet(Socket, {upload, ClientNode, ClientServPid, Hash}) ->
 	% each element of the list  should look like: {IP_address, Port}
 	% Note: ClientNode's IP and Port should be excluded from this list
 
-	Peers = lookup_peers(ClientNode).
+	Peers = lookup_peers(ClientNode),
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers));
@@ -91,7 +91,7 @@ open_packet(Socket, {download, ClientNode, ClientServPid, Hash}) ->
 
 	erlang:display("client wants init download!"),
 
-	Peers = lookup_peers(ClientNode)
+	Peers = lookup_peers(ClientNode),
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers)).

@@ -12,7 +12,7 @@
 
 join(MonitorIP, MonitorPort, MyPort) ->
 
-	init_client_dets().
+	init_client_dets(),
 	% Each record in the db should have key: Filename and value: Hash
 
 	% spawn my tcp_server
@@ -61,12 +61,13 @@ init_upload(MonitorIP, MonitorPort, File) ->
 	Socket = connect(MonitorIP, MonitorPort),
 
 	% build file packet
+	% something is wrong in build_packet
 	FilePacket = build_packet(File),
 
 	% parse file packet to get Hash
 	{Filename, Hash, Content} = parse_packet(FilePacket),
 
-	add_file_to_table({Filename, Hash})
+	add_file_to_table({Filename, Hash}),
 	% thats adds a new file record to the client's db
 
 	% build init_upload request packet

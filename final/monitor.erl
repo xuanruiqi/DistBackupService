@@ -92,12 +92,14 @@ connect_client(ClientNode, ClientServPid, ClientIP, ClientPort) ->
 
 logout_client(client_left, ClientNode) ->
 
-        erlang:display("CLIENT REQUESTED LOGOUT: logging out client"),
-    
+    erlang:display("CLIENT REQUESTED LOGOUT: logging out client"),
 
-        MonitorRef = lookup_client(ClientNode),
+    % this doesn't work -> returns {error, notfound}
+    MonitorRef = lookup_client(ClientNode),
 
-        remove_client_from_database(ClientNode),
+    erlang:display(MonitorRef),
+
+    remove_client_from_database(ClientNode),
     
 	demonitor(MonitorRef);
 
