@@ -68,6 +68,10 @@ connect_client(ClientNode, ClientServPid, ClientIP, ClientPort) ->
 
 	erlang:display("CLIENT REQUESTED JOIN: adding client"),
 
+	% connect to ClientNode
+	%net_kernel:connect_node(ClientNode),
+	net_adm:ping(ClientNode),
+
 	NewClientServPid = rpc:call(ClientNode, erlang, list_to_pid, [ClientServPid]),
 
 	erlang:display(NewClientServPid),
