@@ -2,6 +2,7 @@
 -behavior(gen_server).
 
 -import(file_proc, [parse_packet/1]).
+-import(database, [lookup_peers/1]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -77,17 +78,12 @@ open_packet(Socket, {upload, ClientNode, ClientServPid, Hash}) ->
 
 	erlang:display("client wants init upload!"),
 
-	% TODO: write function called lookup_clients 
 	% to return list of tuples containing 
 	% every client's IP address and port number
 	% each element of the list  should look like: {IP_address, Port}
 	% Note: ClientNode's IP and Port should be excluded from this list
 
-	% TODO: uncomment the line below 
-	% Peers = lookup_clients()
-
-	% TODO: delete line below
-	Peers = [0],
+	Peers = lookup_peers(ClientNode).
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers));
@@ -95,11 +91,7 @@ open_packet(Socket, {download, ClientNode, ClientServPid, Hash}) ->
 
 	erlang:display("client wants init download!"),
 
-	% TODO: uncomment the line below 
-	% Peers = lookup_clients()
-
-	% TODO: delete line below
-	Peers = [0],
+	Peers = lookup_peers(ClientNode)
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers)).

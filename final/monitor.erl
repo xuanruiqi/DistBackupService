@@ -1,6 +1,8 @@
 -module(monitor).
 
 -import(monitor_tcp_sup, [start_link/0, start_link/1]).
+-import(database, [init_monitor_dets/0, add_client/1, lookup_monitor_ref/1,
+			lookup_client/1, remove_client_from_database/1]).
 
 -export([init_monitor/1]).
 
@@ -11,7 +13,7 @@
 
 init_monitor([]) ->
 
-	% TODO: init ets db
+	init_monitor_dets(),
 
 	% register process
 	register(monitor, self()),
@@ -28,7 +30,7 @@ init_monitor([]) ->
 
 init_monitor([Port]) ->
 
-	% TODO: init ets db
+	init_monitor_dets(),
 
 	% register process
 	register(monitor, self()),
@@ -72,40 +74,37 @@ connect_client(ClientNode, ClientServPid, ClientIP, ClientPort) ->
 
 	erlang:display(NewClientServPid),
 
-	MonitorRef = monitor(process, NewClientServPid).
+	MonitorRef = monitor(process, NewClientServPid),
 
-	% TODO: add client to db with following attributes:
+	DatabaseEntry = {ClientNode, MonitorRef, NewClientServPid,
+			 ClientIP, ClientPort},
 		% ClientNode (key),
 		% MonitorRef (we will need this later in logout_client()),
 		% NewClientServPid,
 		% ClientIP, 
 		% ClientPort
+	add_client(DatabaseEntry).
 
 
 logout_client(client_left, ClientNode) ->
 
-	erlang:display("CLIENT REQUESTED LOGOUT: logging out client");
+        erlang:display("CLIENT REQUESTED LOGOUT: logging out client"),
+    
 
-	% TODO: write function to lookup ClientNode's MonitorRef in db
-	% MonitorRef = lookup_monitor_ref(ClientNode)
+        MonitorRef = lookup_client(ClientNode),
 
-	% TODO: write function to remove client from db
-	% remove(ClientNode)
-
-	% TODO: after lookup and remove funs have been implemented, 
-	% uncomment the code below
-	% demonitor(MonitorRef);
+        remove_client_from_database(ClientNode),
+    
+	demonitor(MonitorRef);
 
 logout_client(client_down, MonitorRef) ->
 
-	erlang:display("CLIENT DOWN: logging out client").
+	erlang:display("CLIENT DOWN: logging out client"),
 
-	% TODO: write function to lookup the client's ClientNode 
 	% using client's MonitorRef
-	% ClientNode = lookup_client_node(MonitorRef)
+	ClientNode = lookup_monitor_ref(MonitorRef),
 
-	% TODO: write function to remove client from db
-	% remove(ClientNode).
+	remove_client_from_database(ClientNode).
 
 	% there is no need to call demonitor() in this case
 	% because monitoring was turned off when client went down

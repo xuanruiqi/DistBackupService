@@ -2,6 +2,8 @@
 
 -import(file_proc, [build_packet/1, parse_packet/1]).
 -import(tcp_sup, [start_link/0, start_link/1]).
+-import(database, [init_client_dets/0, add_file_to_table/1,
+                   lookup_file/1]).
 -export([join/3, logout/2, init_upload/3, init_download/3]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -10,7 +12,7 @@
 
 join(MonitorIP, MonitorPort, MyPort) ->
 
-	% TODO: write function to initialize client's db of file records
+	init_client_dets().
 	% Each record in the db should have key: Filename and value: Hash
 
 	% spawn my tcp_server
@@ -64,10 +66,8 @@ init_upload(MonitorIP, MonitorPort, File) ->
 	% parse file packet to get Hash
 	{Filename, Hash, Content} = parse_packet(FilePacket),
 
-	% TODO: write a function called add(Filename, Hash)
+	add_file_to_table({Filename, Hash})
 	% thats adds a new file record to the client's db
-	% TODO: uncomment the line below
-	% add(Filename, Hash),
 
 	% build init_upload request packet
 	Packet = term_to_binary({upload, node(), ServPid, Hash}),
@@ -93,14 +93,7 @@ init_download(MonitorIP, MonitorPort, File) ->
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
-	% TODO: write function called lookup(File) 
-	% that searches for File in the client's db
-	% and returns the corresponding Hash
-	% TODO: uncomment the line below
-	% Hash = lookup(File),
-
-	% TODO: delete the line below
-	Hash = 0,
+	Hash = lookup_file(File),
 
 	% init tcp connection with monitor's server
 	Socket = connect(MonitorIP, MonitorPort),
