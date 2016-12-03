@@ -1,5 +1,5 @@
 -module(file_proc).
--export([build_packet/1, parse_packet/1]).
+-export([build_packet/1, parse_packet/1, write_peer_file/2]).
 
 %%        Message Protocol
 %% ==============================
@@ -60,3 +60,11 @@ parse_packet(Packet) ->
     {Fname, Hash, Content} = split_packet(Packet),
     Filename = extract_filename(Fname),
     {Filename, Hash, Content}.
+
+write_peer_file(Filename, File) ->
+    erlang:display("writing peer file"),
+    case filelib:ensure_dir("peer_files") of
+        ok    -> file:make_dir("peer_files"),
+                 file:write_file(filename:join(["./peer_files", Filename]), File);
+        Error -> Error
+    end.
