@@ -1,7 +1,7 @@
 %%% @author Benjamin E. Holen <bholen01@rm121-01.eecs.tufts.edu>
 %%% @copyright (C) 2016, Benjamin E. Holen
 %%% @doc
-%%%
+%%% Module for handling DETS tables
 %%% @end
 %%% Created :  2 Dec 2016 by Benjamin E. Holen
 
@@ -35,6 +35,7 @@ add_client(Entry = {_ClientNode, _MonitorRef, _NewClientServPid, _ClientIP, _Cli
     open_table(monitor),
     dets:insert('Database', Entry).
 
+% looks up the monitor reference from a clientID
 lookup_monitor_ref(ClientNode) ->
     open_table(monitor),
     case  dets:lookup('Database', ClientNode) of
@@ -42,7 +43,7 @@ lookup_monitor_ref(ClientNode) ->
 	_ -> {error, notfound}
     end.
 
-
+% looks up the clientID from a monitor reference
 lookup_client(MonitorRef) ->
     open_table(monitor),
     case dets:match_object('Database', {'_', MonitorRef, '_', '_', '_'}) of
@@ -56,7 +57,7 @@ remove_client_from_database(ClientNode) ->
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MONITOR DATABASE FUNCS
+% MONITOR_TCP_SERVER DATABASE FUNCS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 lookup_peers(Self) ->
@@ -65,14 +66,10 @@ lookup_peers(Self) ->
     Peers = dets:foldr(fun (E, Acc) ->  [E|Acc] end, [], 'Database'),
     proplists:delete(Self, Peers), 
     Peers.
-%    Peers = [{IP, Port} || {_,_,_, IP, Port} <- 
-%	    dets:match_object('Database', {'_' ,'_','_','_','_'})],
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CLIENT TABLE FUNCS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 init_client_dets() ->
     open_table(client).
@@ -81,6 +78,7 @@ add_file_to_table(Entry = {_Filename, _Hash}) ->
     open_table(client),
     dets:insert('Files', Entry).
 
+% returns the hash for Filename, as it was when the file was uploaded
 lookup_file(Filename) ->
     open_table(client),
     case  dets:lookup('Files', Filename) of
