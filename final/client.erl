@@ -141,10 +141,12 @@ upload(FilePacket, Peers) ->
 	{Filename, Hash, Content} = parse_packet(FilePacket),
 
 	% build upload request packet
-	Packet = term_to_binary({upload, Filename, Hash, Content}).
+	Packet = term_to_binary({upload, Filename, Hash, Content}),
 
 	% TODO: write loop that connects client to each Peer in Peers
 	% and sends Packet to each Peer
+	upload_to_peer(Peers, Packet).
+
 
 download(Hash, Peers) ->
 
@@ -156,6 +158,13 @@ download(Hash, Peers) ->
 	% TODO: write loop that connects client to each Peer in Peers
 	% and sends Packet to each Peer
 
+upload_to_peer([], Packet) -> 0;
+upload_to_peer([H | T], Packet) ->
+	{IP, Port} = H,
+	Socket = connect(IP, Port), 
+	gen_tcp:send(Socket, Packet),
+	gen_tcp:close(Socket),
+	upload_to_peer(T, Packet).
 
 
 

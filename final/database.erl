@@ -61,11 +61,11 @@ remove_client_from_database(ClientNode) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 lookup_peers(Self) ->
+    erlang:display(Self),
     open_table(monitor),
 
-    Peers = dets:foldr(fun (E, Acc) ->  [E|Acc] end, [], 'Database'),
-    proplists:delete(Self, Peers), 
-    Peers.
+    Peers = dets:foldr(fun (_E = {_,_,_, IP, Port}, Acc) ->  [{IP, Port}|Acc] end, [], 'Database'),
+    proplists:delete(Self, Peers).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CLIENT TABLE FUNCS
