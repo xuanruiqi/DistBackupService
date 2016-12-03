@@ -15,6 +15,16 @@ upload_to_peer([H | T], Packet) ->
 	gen_tcp:close(Socket),
 	upload_to_peer(T, Packet).
 
+download_from_peer([], Packet) -> 0;
+download_from_to_peer([H | T], Packet) ->
+	{IP, Port} = H,
+	Socket = connect(IP, Port), 
+	gen_tcp:send(Socket, Packet),
+	gen_tcp:close(Socket),
+	upload_to_peer(T, Packet).
+
+
+
 connect(IP_address, Port) ->
 
 	{ok, Socket} = gen_tcp:connect(IP_address, Port, [binary, {packet, 4}, {active, false}]),
