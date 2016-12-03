@@ -1,7 +1,7 @@
 -module(tcp_server).
 -behavior(gen_server).
 
--import(file_proc, [parse_packet/1, write_peer_file/1]).
+-import(file_proc, [parse_packet/1, write_peer_file/2]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -43,7 +43,7 @@ handle_info({tcp, Socket, <<"hello", _/binary>>}, State) ->
 	{noreply, State};
 handle_info({tcp, Socket, Packet}, State) ->
  	erlang:display("received packet from client"),
- 	erlang:display(binary_to_term(Packet)),
+ 	%erlang:display(binary_to_term(Packet)),
  	open_packet(Socket, binary_to_term(Packet)),
  	{noreply, State};
 handle_info({tcp_closed, _Socket}, State) -> {stop, normal, State};
