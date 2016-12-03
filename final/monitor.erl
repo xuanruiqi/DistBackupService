@@ -1,3 +1,4 @@
+
 -module(monitor).
 
 -import(monitor_tcp_sup, [start_link/0, start_link/1]).
@@ -112,8 +113,8 @@ logout_client(client_down, MonitorRef) ->
 
 	remove_client_from_database(ClientNode).
 
-	% there is no need to call demonitor() in this case
-	% because monitoring was turned off when client went down
+	% call demonitor() to stop monitoring ClientNode
+
 
 
 
