@@ -60,3 +60,9 @@ parse_packet(Packet) ->
     {Fname, Hash, Content} = split_packet(Packet),
     Filename = extract_filename(Fname),
     {Filename, Hash, Content}.
+
+write_peer_file(Filename, File) ->
+    case filelib:ensure_dir("peer_files") of
+        ok    -> file:write_file(Filename, File);
+        Error -> Error
+    end.

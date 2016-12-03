@@ -1,7 +1,7 @@
 -module(tcp_server).
 -behavior(gen_server).
 
--import(file_proc, [parse_packet/1]).
+-import(file_proc, [parse_packet/1, write_peer_file/1]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -59,10 +59,11 @@ code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 
 open_packet(Socket, {upload, Filename, Hash, Content}) ->
 
-	erlang:display("client wants upload his file!");
+	erlang:display("client wants upload his file!"),
 
 	% TODO: write function to write file to a directory
 	% called peer_files
+	write_peer_file(Filename, Content);
 
 open_packet(Socket, {download, Hash}) ->
 
