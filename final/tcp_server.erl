@@ -60,7 +60,7 @@ code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 open_packet(Socket, {upload, Filename, Hash, Content}) ->
 
 	erlang:display("client wants upload his file!"),
-	write_peer_file(Filename, Content);
+	write_peer_file(filename:basename(Filename), Content);
 
 open_packet(Socket, {download, Hash}) ->
 

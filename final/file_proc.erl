@@ -63,6 +63,7 @@ parse_packet(Packet) ->
 
 write_peer_file(Filename, File) ->
     case filelib:ensure_dir("peer_files") of
-        ok    -> file:write_file(Filename, File);
+        ok    -> file:make_dir("peer_files"),
+                 file:write_file(filename:join(["./peer_files", Filename]), File);
         Error -> Error
     end.
