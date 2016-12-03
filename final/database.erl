@@ -63,7 +63,8 @@ lookup_peers(Self) ->
     open_table(monitor),
 
     Peers = dets:foldr(fun (E, Acc) ->  [E|Acc] end, [], 'Database'),
-    proplists:delete(Self, Peers).
+    proplists:delete(Self, Peers), 
+    Peers.
 %    Peers = [{IP, Port} || {_,_,_, IP, Port} <- 
 %	    dets:match_object('Database', {'_' ,'_','_','_','_'})],
 
