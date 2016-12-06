@@ -30,7 +30,6 @@ join(MonitorIP, MonitorPort, MyPort) ->
 
 	% build join request packet
 	Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyPort}),
-
 	% send request to join
 	gen_tcp:send(Socket, Packet),
 
@@ -116,7 +115,7 @@ init_download(MonitorIP, MonitorPort, File) ->
 	erlang:display(Peers),
 
 	% call helper fun to download File from every Peer in Peers
-	download(Hash, Peers).
+	download(Hash, Peers, File).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,7 +147,7 @@ upload(FilePacket, Peers) ->
 	upload_to_peer(Peers, Packet).
 
 
-download(Hash, Peers) ->
+download(Hash, Peers, Filename) ->
 
 	erlang:display("downloading my file from my peers!"),
 
@@ -157,7 +156,7 @@ download(Hash, Peers) ->
 
 	% TODO: write loop that connects client to each Peer in Peers
 	% and sends Packet to each Peer
-	download_from_peer(Peers, Packet).
+	download_from_peer(Peers, Packet, Filename).
 
 upload_to_peer([], Packet) -> 0;
 upload_to_peer([H | T], Packet) ->
@@ -167,24 +166,35 @@ upload_to_peer([H | T], Packet) ->
 	gen_tcp:close(Socket),
 	upload_to_peer(T, Packet).
 
-download_from_peer([], Packet) -> 0;
-download_from_peer([H | T], Packet) ->
+download_from_peer([], Packet, Filename) -> 0;
+download_from_peer([H | T], Packet, Filename) ->
 	{IP, Port} = H,
 	Socket = connect(IP, Port), 
 	gen_tcp:send(Socket, Packet),
 
 	% wait for response
-	{ok, Packet} = gen_tcp:recv(Socket, 0),
+	{ok, RetVal} = gen_tcp:recv(Socket, 0),
+
+	erlang:display("received my file from a peer!"),
 
 	gen_tcp:close(Socket),
 
 	% parse packet
-	{Filename, Hash, Content} = parse_packet(Packet),
+	%Content = binary_to_term(RetVal),
+
+	erlang:display(Filename),
+	erlang:display(filename:basename(Filename)),
+	erlang:display(filename:join(["./", filename:basename(Filename)])),
 
 	% write file
-	file:write_file(filename:join(["./", filename:basename(Filename)]), Content),
+	Success = file:write_file(filename:basename(Filename), RetVal),
 
-	download_from_peer(T, Packet).
+	case Success of
+		ok -> erlang:display("OK");
+		{error, Reason} -> erlang:display(Reason)
+	end,
+
+	download_from_peer(T, Packet, Filename).
 
 
 

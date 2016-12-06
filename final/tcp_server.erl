@@ -1,7 +1,7 @@
 -module(tcp_server).
 -behavior(gen_server).
 
--import(file_proc, [parse_packet/1, write_peer_file/2]).
+-import(file_proc, [parse_packet/1, write_peer_file/2, read/1]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -60,19 +60,27 @@ code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 open_packet(Socket, {upload, Filename, Hash, Content}) ->
 
 	erlang:display("client wants upload his file!"),
-	write_peer_file(filename:basename(Filename), Content),
+	write_peer_file(filename:basename(Filename), Content);
 
 open_packet(Socket, {download, Hash}) ->
     erlang:display("client wants download his file!"), 
+    io:fwrite("Hash: ~p~n", [Hash]),
     {ok, Files} = file:list_dir("peer_files"),
-    Hashes = lists:map(fun(File) -> crypto:hash(md5, File) end, Files),
+    erlang:display(Files),
+    Hashes = lists:map(fun(File) -> crypto:hash(md5, read(filename:join(["./peer_files", File]))) end, Files),
     FileIndex = lists:zip(Hashes, Files),
+    erlang:display("looking for file.."),
     case lists:keyfind(Hash, 1, FileIndex) of
-        {Hash, File} -> File,
-        false        -> not_found
+        {Hash, File} -> 
+            erlang:display("found file! sending file back to client"),
+            %Packet = term_to_binary({Hash, File}),
+            Packet = File,
+            gen_tcp:send(Socket, Packet);
+        false -> 
+            erlang:display("fild not found"),
+            Packet = term_to_binary({Hash, "Error: file not found"}),
+            gen_tcp:send(Socket, Packet)
     end.
-    % TODO: send file to client
-
 
 
 decode_packet(Packet) -> 

@@ -1,5 +1,5 @@
 -module(file_proc).
--export([build_packet/1, parse_packet/1, write_peer_file/2]).
+-export([build_packet/1, parse_packet/1, write_peer_file/2, read/1]).
 
 %%        Message Protocol
 %% ==============================
