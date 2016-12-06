@@ -1,6 +1,6 @@
 -module(client).
 
--import(file_proc, [build_packet/1, parse_packet/1]).
+-import(file_proc, [build_packet/1, parse_packet/1, write_peer_file/2]).
 -import(tcp_sup, [start_link/0, start_link/1]).
 -import(database, [init_client_dets/0, add_file_to_table/1,
                    lookup_file/1]).
@@ -153,10 +153,11 @@ download(Hash, Peers) ->
 	erlang:display("downloading my file from my peers!"),
 
 	% build download request packet
-	Packet = term_to_binary({download, Hash}).
+	Packet = term_to_binary({download, Hash}),
 
 	% TODO: write loop that connects client to each Peer in Peers
 	% and sends Packet to each Peer
+	download_from_peer(Peers, Packet).
 
 upload_to_peer([], Packet) -> 0;
 upload_to_peer([H | T], Packet) ->
@@ -165,6 +166,25 @@ upload_to_peer([H | T], Packet) ->
 	gen_tcp:send(Socket, Packet),
 	gen_tcp:close(Socket),
 	upload_to_peer(T, Packet).
+
+download_from_peer([], Packet) -> 0;
+download_from_peer([H | T], Packet) ->
+	{IP, Port} = H,
+	Socket = connect(IP, Port), 
+	gen_tcp:send(Socket, Packet),
+
+	% wait for response
+	{ok, Packet} = gen_tcp:recv(Socket, 0),
+
+	gen_tcp:close(Socket),
+
+	% parse packet
+	{Filename, Hash, Content} = parse_packet(Packet),
+
+	% write file
+	file:write_file(filename:join(["./", filename:basename(Filename)]), Content),
+
+	download_from_peer(T, Packet).
 
 
 

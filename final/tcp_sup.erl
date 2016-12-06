@@ -8,51 +8,67 @@
 -define(DEFAULT_PORT, 8099).
 
 start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+	try supervisor:start_link({local, ?MODULE}, ?MODULE, []) of
+		Any -> Any
+	catch
+		_:_-> erlang:display('error, bad socket')
+	end.
 start_link(Port) ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, [Port]).
 
 init([]) ->
 
-	{ok, ListenSocket} = gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]),
 
-	%% We start our pool of empty listeners.
-	%% We must do this in another, as it is a blocking process.
+	% {ok, ListenSocket} = gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]),
 
-	spawn_link(fun empty_listeners/0),
+	case gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]) of
+		{ok, ListenSocket} -> 
+			%% We start our pool of empty listeners.
+			%% We must do this in another, as it is a blocking process.
 
-	SupFlags = #{strategy => simple_one_for_one,
-				intensity => 60,
-				period => 3600},
-	ChildSpecs = [#{id => tcp_server,
-					start => {tcp_server, start_link, [ListenSocket]},
-					restart => temporary,
-					type => worker,
-					shutdown => 1000,
-					modules => [tcp_server]}],
+			spawn_link(fun empty_listeners/0),
 
-	{ok, {SupFlags, ChildSpecs}};
+			SupFlags = #{strategy => simple_one_for_one,
+						intensity => 60,
+						period => 3600},
+			ChildSpecs = [#{id => tcp_server,
+							start => {tcp_server, start_link, [ListenSocket]},
+							restart => temporary,
+							type => worker,
+							shutdown => 1000,
+							modules => [tcp_server]}],
+
+			{ok, {SupFlags, ChildSpecs}};
+		{error, Reason} -> 
+			erlang:display("port bad"),
+			init([?DEFAULT_PORT - 1])
+	end;
+
 
 init([Port]) ->
 
-	{ok, ListenSocket} = gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]),
+	case gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]) of
+		{ok, ListenSocket} -> 
+			%% We start our pool of empty listeners.
+			%% We must do this in another, as it is a blocking process.
 
-	%% We start our pool of empty listeners.
-	%% We must do this in another proc, as it is a blocking process.
+			spawn_link(fun empty_listeners/0),
 
-	spawn_link(fun empty_listeners/0),
+			SupFlags = #{strategy => simple_one_for_one,
+						intensity => 60,
+						period => 3600},
+			ChildSpecs = [#{id => tcp_server,
+							start => {tcp_server, start_link, [ListenSocket]},
+							restart => temporary,
+							type => worker,
+							shutdown => 1000,
+							modules => [tcp_server]}],
 
-	SupFlags = #{strategy => simple_one_for_one,
-				intensity => 60,
-				period => 3600},
-	ChildSpecs = [#{id => tcp_server,
-					start => {tcp_server, start_link, [ListenSocket]},
-					restart => temporary,
-					type => worker,
-					shutdown => 1000,
-					modules => [tcp_server]}],
-
-	{ok, {SupFlags, ChildSpecs}}.
+			{ok, {SupFlags, ChildSpecs}};
+		{error, Reason} -> 
+			erlang:display("port bad"),
+			init([Port - 1])
+	end.
 
 start_socket() ->
 	supervisor:start_child(?MODULE, []).
