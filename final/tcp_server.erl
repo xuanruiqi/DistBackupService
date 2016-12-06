@@ -63,14 +63,17 @@ open_packet(Socket, {upload, Filename, Hash, Content}) ->
 	write_peer_file(filename:basename(Filename), Content);
 
 open_packet(Socket, {download, Hash}) ->
-
-	erlang:display("client wants download his file!").
-
+	erlang:display("client wants download his file!"), 
 	% TODO: write function to Hash each file in peer_files
 	% and return the file whose hash matches Hash
-
+    {ok, Files} = file:list_dir("peer_files"),
+    Hashes = lists:map(fun(File) -> crypto:hash(md5, File) end, Files),
+    FileIndex = lists:zip(Hashes, Files),
+    case lists:keyfind(Hash, 1, FileIndex) of
+        {Hash, File} -> File,
+        false        -> not_found
+    end,
 	% TODO: send file to client
-
 
 
 
