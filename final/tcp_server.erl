@@ -62,7 +62,7 @@ open_packet(Socket, {upload, Filename, Hash, Content}) ->
 	erlang:display("client wants upload his file!"),
 	write_peer_file(filename:basename(Filename), Content);
 
-open_packet(Socket, {download, Hash}) ->
+open_packet(Socket, {download, Filename, Hash}) ->
     erlang:display("client wants download his file!"), 
     io:fwrite("Hash: ~p~n", [Hash]),
     {ok, Files} = file:list_dir("peer_files"),
@@ -73,8 +73,8 @@ open_packet(Socket, {download, Hash}) ->
     case lists:keyfind(Hash, 1, FileIndex) of
         {Hash, File} -> 
             erlang:display("found file! sending file back to client"),
-            %Packet = term_to_binary({Hash, File}),
-            Packet = File,
+            %Packet = File,
+            Packet = read(filename:join(["./peer_files", File])),
             gen_tcp:send(Socket, Packet);
         false -> 
             erlang:display("fild not found"),

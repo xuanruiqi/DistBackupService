@@ -152,7 +152,7 @@ download(Hash, Peers, Filename) ->
 	erlang:display("downloading my file from my peers!"),
 
 	% build download request packet
-	Packet = term_to_binary({download, Hash}),
+	Packet = term_to_binary({download, Filename, Hash}),
 
 	% TODO: write loop that connects client to each Peer in Peers
 	% and sends Packet to each Peer
@@ -172,15 +172,13 @@ download_from_peer([H | T], Packet, Filename) ->
 	Socket = connect(IP, Port), 
 	gen_tcp:send(Socket, Packet),
 
-	% wait for response
+	%wait for response
 	{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
 	erlang:display("received my file from a peer!"),
 
 	gen_tcp:close(Socket),
 
-	% parse packet
-	%Content = binary_to_term(RetVal),
 
 	erlang:display(Filename),
 	erlang:display(filename:basename(Filename)),
@@ -192,9 +190,9 @@ download_from_peer([H | T], Packet, Filename) ->
 	case Success of
 		ok -> erlang:display("OK");
 		{error, Reason} -> erlang:display(Reason)
-	end,
+	end.
 
-	download_from_peer(T, Packet, Filename).
+	%download_from_peer(T, Packet, Filename).
 
 
 
