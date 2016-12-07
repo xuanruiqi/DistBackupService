@@ -1,7 +1,7 @@
 -module(tcp_sup).
 -behavior(supervisor).
 
--export([start_link/0, start_link/1, start_socket/0]).
+-export([start_link/0, start_link/2, start_socket/0]).
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
@@ -13,8 +13,8 @@ start_link() ->
 	catch
 		_:_-> erlang:display('error, bad socket')
 	end.
-start_link(Port) ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, [Port]).
+start_link(Port, ParentPid) ->
+	supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, ParentPid]).
 
 init([]) ->
 
@@ -45,10 +45,14 @@ init([]) ->
 	end;
 
 
-init([Port]) ->
+init([Port, ParentPid]) ->
 
 	case gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]) of
 		{ok, ListenSocket} -> 
+
+			%% When we have successfully started a listener on Port, 
+			%% send Port back to ParentPid
+			ParentPid ! Port,
 			%% We start our pool of empty listeners.
 			%% We must do this in another, as it is a blocking process.
 
@@ -67,7 +71,7 @@ init([Port]) ->
 			{ok, {SupFlags, ChildSpecs}};
 		{error, Reason} -> 
 			erlang:display("port bad"),
-			init([Port - 1])
+			init([Port - 1, ParentPid])
 	end.
 
 start_socket() ->

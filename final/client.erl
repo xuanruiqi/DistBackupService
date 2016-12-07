@@ -1,7 +1,7 @@
 -module(client).
 
 -import(file_proc, [build_packet/1, parse_packet/1, write_peer_file/2]).
--import(tcp_sup, [start_link/0, start_link/1]).
+-import(tcp_sup, [start_link/0, start_link/2]).
 -import(database, [init_client_dets/0, add_file_to_table/1,
                    lookup_file/1]).
 -export([join/3, logout/2, init_upload/3, init_download/3]).
@@ -13,13 +13,20 @@
 join(MonitorIP, MonitorPort, MyPort) ->
 
 	init_client_dets(),
-	% Each record in the db should have key: Filename and value: Hash
 
-	% spawn my tcp_server
-	tcp_sup:start_link(MyPort),
+	MyPid = self(),
+
+	% start my tcp_server
+	tcp_sup:start_link(MyPort, MyPid),
+
+	% wait for tcp_sup to send back the listening port
+	receive
+		MyNewPort -> 
+			erlang:display("received Port number from child proc!"),
+			erlang:display(MyNewPort)
+	end,
 
 	% find my IP address and Port
-
 	MyIP = local_ip_v4(),
 
 	% get pid of my server
@@ -28,8 +35,11 @@ join(MonitorIP, MonitorPort, MyPort) ->
 	% init tcp connection with monitor's server
 	Socket = connect(MonitorIP, MonitorPort),
 
+	%MyNewPort = inet:port(Socket),
+	%erlang:display(MyNewPort),
+
 	% build join request packet
-	Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyPort}),
+	Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyNewPort}),
 	% send request to join
 	gen_tcp:send(Socket, Packet),
 
