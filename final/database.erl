@@ -9,7 +9,7 @@
 
 % monitor funcs
 -export([init_monitor_dets/0, add_client/1, lookup_monitor_ref/1, lookup_client/1, 
-	remove_client_from_database/1]).
+	remove_client_from_database/1, print_all/0, clear_table/0]).
 
 % monitor_tcp_server funcs
 -export([lookup_peers/1]).
@@ -54,6 +54,15 @@ lookup_client(MonitorRef) ->
 remove_client_from_database(ClientNode) ->
     open_table(monitor),
     dets:delete('Database', ClientNode).
+
+print_all() ->
+    open_table(monitor),
+    All = dets:foldr(fun (E = {_,_,_, _IP, _Port}, Acc) ->  [E|Acc] end, [], 'Database'),
+    erlang:display(All).
+
+clear_table() ->
+    open_table(monitor),
+    dets:match_delete('Database', {'_','_','_','_','_'}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
