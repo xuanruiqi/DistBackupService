@@ -24,8 +24,8 @@
 %%%===================================================================
 
 login(Node) ->
-    ets:insert(clients, {Node, []}),
-    ets:insert(servers, {Node}),
+    %ets:insert(clients, {Node, []}),
+    %ets:insert(servers, {Node}),
     startServer(Node),
     ok.
 

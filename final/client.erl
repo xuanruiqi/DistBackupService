@@ -216,6 +216,8 @@ download_from_peer([H | T], Packet, Filename) ->
 
 			erlang:display("received a packet from a peer!"),
 
+			erlang:display(RetVal),
+
 			gen_tcp:close(Socket),
 
 			% TODO: this exception handler is not working
