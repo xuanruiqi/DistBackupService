@@ -1,7 +1,7 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
 
--import(client, [join/3, init_download/3]).
+-import(client, [join/3, init_download/3, init_upload/3]).
 -define(MONITOR_PORT, 8099).
 -define(SELF_PORT, 4598).
 -mode(compile).
@@ -38,10 +38,12 @@ loop(IPAddr) ->
     case io:get_line("> ") of
         "download\n" -> RawFilename = io:get_line("Filename: "),
                         Filename = re:replace(RawFilename, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
+                        io:fwrite("Filename: ~s", Filename),
                         client:init_download(IPAddr, ?MONITOR_PORT, Filename),
                         loop(IPAddr);
-        "upload\n"   -> RawFilename = io:get_line("Filename: "),
+        "upload\n"   -> RawFilename = io:get_line("Filename: "), 
                         Filename = re:replace(RawFilename, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
+                        io:fwrite("Filename: ~s", Filename),
                         client:init_upload(IPAddr, ?MONITOR_PORT, Filename),
                         loop(IPAddr);
         "logout\n"   -> client:logout(IPAddr, ?MONITOR_PORT),
