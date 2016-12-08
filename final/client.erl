@@ -95,8 +95,16 @@ init_upload(MonitorIP, MonitorPort, File) ->
 
 			erlang:display(Peers),
 
+			case Peers of 
+				[] -> 
+					erlang:display("There are no peers to accept uploads at this time.");
+				List -> 
+					% call helper fun to upload File to every Peer in Peers
+					upload(FilePacket, Peers)
+			end;
+
 			% call helper fun to upload File to every Peer in Peers
-			upload(FilePacket, Peers);
+			%upload(FilePacket, Peers);
 		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
 	end.
 
@@ -128,8 +136,15 @@ init_download(MonitorIP, MonitorPort, File) ->
 
 			erlang:display(Peers),
 
+			case Peers of 
+				[] -> 
+					erlang:display("There are no peers to download from at this time.");
+				List -> 
+					% call helper fun to download File from every Peer in Peers
+					download(Hash, Peers, File)			
+			end;
 			% call helper fun to download File from every Peer in Peers
-			download(Hash, Peers, File);
+			%download(Hash, Peers, File);
 		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
 	end.
 
