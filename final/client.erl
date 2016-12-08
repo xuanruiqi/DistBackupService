@@ -178,36 +178,84 @@ download(Hash, Peers, Filename) ->
 upload_to_peer([], Packet) -> 0;
 upload_to_peer([H | T], Packet) ->
 	{IP, Port} = H,
-	Socket = connect(IP, Port), 
-	gen_tcp:send(Socket, Packet),
-	gen_tcp:close(Socket),
+
+	case connect(IP, Port) of
+		{ok, Socket} ->
+
+			gen_tcp:send(Socket, Packet),
+
+			gen_tcp:close(Socket); 
+
+		{error, Reason} -> erlang:display("You cannot connect to a peer.")
+	end,
+	%Socket = connect(IP, Port), 
+	%gen_tcp:send(Socket, Packet),
+	%gen_tcp:close(Socket),
 	upload_to_peer(T, Packet).
 
 download_from_peer([], Packet, Filename) -> 0;
 download_from_peer([H | T], Packet, Filename) ->
 	{IP, Port} = H,
-	Socket = connect(IP, Port), 
-	gen_tcp:send(Socket, Packet),
 
-	%wait for response
-	{ok, RetVal} = gen_tcp:recv(Socket, 0),
+	case connect(IP, Port) of
+		{ok, Socket} ->
 
-	erlang:display("received my file from a peer!"),
+			gen_tcp:send(Socket, Packet),
 
-	gen_tcp:close(Socket),
+			%wait for response
+			{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
+			erlang:display("received my file from a peer!"),
 
-	erlang:display(Filename),
-	erlang:display(filename:basename(Filename)),
-	erlang:display(filename:join(["./", filename:basename(Filename)])),
+			gen_tcp:close(Socket),
 
-	% write file
-	Success = file:write_file(filename:basename(Filename), RetVal),
+			erlang:display(Filename),
+			erlang:display(filename:basename(Filename)),
+			erlang:display(filename:join(["./", filename:basename(Filename)])),
 
-	case Success of
-		ok -> erlang:display("OK");
-		{error, Reason} -> erlang:display(Reason)
+			% write file
+			Success = file:write_file(filename:basename(Filename), RetVal),
+
+			case Success of
+				ok -> erlang:display("OK");
+				{error, Reason} -> erlang:display(Reason)
+			end;
+
+		{error, Reason} -> 
+			erlang:display("You cannot connect to a peer."),
+			download_from_peer(T, Packet, Filename)
 	end.
+
+
+
+
+
+
+
+
+
+	% Socket = connect(IP, Port), 
+	% gen_tcp:send(Socket, Packet),
+
+	% %wait for response
+	% {ok, RetVal} = gen_tcp:recv(Socket, 0),
+
+	% erlang:display("received my file from a peer!"),
+
+	% gen_tcp:close(Socket),
+
+
+	% erlang:display(Filename),
+	% erlang:display(filename:basename(Filename)),
+	% erlang:display(filename:join(["./", filename:basename(Filename)])),
+
+	% % write file
+	% Success = file:write_file(filename:basename(Filename), RetVal),
+
+	% case Success of
+	% 	ok -> erlang:display("OK");
+	% 	{error, Reason} -> erlang:display(Reason)
+	% end.
 
 	%download_from_peer(T, Packet, Filename).
 
