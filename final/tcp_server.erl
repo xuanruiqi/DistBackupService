@@ -65,7 +65,10 @@ open_packet(Socket, {upload, Filename, Hash, Content}) ->
 open_packet(Socket, {download, Filename, Hash}) ->
     erlang:display("client wants download his file!"), 
     io:fwrite("Hash: ~p~n", [Hash]),
+
+    % TODO: we need an exception handler for this
     {ok, Files} = file:list_dir("peer_files"),
+
     erlang:display(Files),
     Hashes = lists:map(fun(File) -> crypto:hash(md5, read(filename:join(["./peer_files", File]))) end, Files),
     FileIndex = lists:zip(Hashes, Files),
@@ -73,12 +76,12 @@ open_packet(Socket, {download, Filename, Hash}) ->
     case lists:keyfind(Hash, 1, FileIndex) of
         {Hash, File} -> 
             erlang:display("found file! sending file back to client"),
-            %Packet = File,
             Packet = read(filename:join(["./peer_files", File])),
             gen_tcp:send(Socket, Packet);
         false -> 
             erlang:display("fild not found"),
-            Packet = term_to_binary({Hash, "Error: file not found"}),
+            %Packet = term_to_binary({Hash, "Error: file not found"}),
+            Packet = "Error: file not found",
             gen_tcp:send(Socket, Packet)
     end.
 
