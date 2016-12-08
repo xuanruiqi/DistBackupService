@@ -220,10 +220,14 @@ download_from_peer([H | T], Packet, Filename) ->
 
 			gen_tcp:close(Socket),
 
+			erlang:display(RetVal =:= <<"Error: file not found">>),
+
 			% TODO: this exception handler is not working
 			case RetVal of
-				"Error: file not found" -> 
+				<<"Error: file not found">> -> 
 					erlang:display("peer does not have your file");
+				<<"Error: no files uploaded yet">> ->
+					erlang:display("you have not uploaded a file yet");
 				MyFile -> 
 					% write file
 					Success = file:write_file(filename:basename(Filename), RetVal),
