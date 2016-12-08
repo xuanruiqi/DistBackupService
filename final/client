@@ -36,10 +36,12 @@ join() ->
 
 loop(IPAddr) -> 
     case io:get_line("> ") of
-        "download~n" -> Filename = io:fread("Filename: ", "~s"),
+        "download~n" -> RawFilename = io:fread("Filename: ", "~s"),
+                        Filename = re:replace(RawFilename, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
                         client:init_download(IPAddr, ?MONITOR_PORT, Filename),
                         loop(IPAddr);
-        "upload~n"   -> Filename = io:fread("Filename: ", "~s"),
+        "upload~n"   -> RawFilename = io:fread("Filename: ", "~s"),
+                        Filename = re:replace(RawFilename, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
                         client:init_upload(IPAddr, ?MONITOR_PORT, Filename),
                         loop(IPAddr);
         "logout~n"   -> client:logout(IPAddr, ?MONITOR_PORT),

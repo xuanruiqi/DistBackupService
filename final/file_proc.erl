@@ -41,10 +41,15 @@ pack_file_name(Filename) ->
     end. % Always packed into 255 bytes
 
 build_packet(Filename) ->
-    Fname   = pack_file_name(Filename),
-    Content = read(Filename),
-    Hash    = md5(Content),
-    <<Fname/binary, Hash/binary, Content/binary>>.
+    case read(Filename) of
+        Content -> 
+            Fname = pack_file_name(Filename),
+            Hash  = md5(Content),
+            <<Fname/binary, Hash/binary, Content/binary>>;
+        error   -> 
+            nonexistent_file
+    end.
+    
 
 split_packet(Packet) ->
     % Really tricky!! 255/binary means 255 bytes while 255 means 
