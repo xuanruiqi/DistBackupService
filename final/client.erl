@@ -32,31 +32,37 @@ join(MonitorIP, MonitorPort, MyPort) ->
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
-	% init tcp connection with monitor's server
-	Socket = connect(MonitorIP, MonitorPort),
 
-	% build join request packet
-	Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyNewPort}),
-	% send request to join
-	gen_tcp:send(Socket, Packet),
+	case connect(MonitorIP, MonitorPort) of
+		{ok, Socket} ->
+			% build join request packet
+			Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyNewPort}),
+			% send request to join
+			gen_tcp:send(Socket, Packet),
 
-	gen_tcp:close(Socket).
+			gen_tcp:close(Socket);
+		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+	end.
+
+
 
 logout(MonitorIP, MonitorPort) ->
 
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
-	% init tcp connection with monitor's server
-	Socket = connect(MonitorIP, MonitorPort),
+	%% TODO: shut down server
 
-	% build logout request packet
-	Packet = term_to_binary({logout, node(), ServPid}),
+	case connect(MonitorIP, MonitorPort) of
+		{ok, Socket} ->
+			% build join request packet
+			Packet = term_to_binary({logout, node(), ServPid}),
+			% send request to join
+			gen_tcp:send(Socket, Packet),
 
-	% send request to logout
-	gen_tcp:send(Socket, Packet),
-
-	gen_tcp:close(Socket).
+			gen_tcp:close(Socket);
+		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+	end.
 
 init_upload(MonitorIP, MonitorPort, File) ->
 
@@ -65,9 +71,6 @@ init_upload(MonitorIP, MonitorPort, File) ->
 
 	% find my IP address
 	MyIP = local_ip_v4(),
-
-	% init tcp connection with monitor's server
-	Socket = connect(MonitorIP, MonitorPort),
 
 	% build file packet
 	FilePacket = build_packet(File),
@@ -80,21 +83,25 @@ init_upload(MonitorIP, MonitorPort, File) ->
 	% build init_upload request packet
 	Packet = term_to_binary({upload, node(), ServPid, Hash, MyIP}),
 
-	% send request to logout
-	gen_tcp:send(Socket, Packet),
+	case connect(MonitorIP, MonitorPort) of
+		{ok, Socket} ->
+			% send request to init_upload
+			gen_tcp:send(Socket, Packet),
+			% catch return value
+			{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
-	% catch return value
-	{ok, RetVal} = gen_tcp:recv(Socket, 0),
+			% convert RetVal to list of Peers
+			Peers = binary_to_term(RetVal),
 
-	% convert RetVal to list of Peers
-	Peers = binary_to_term(RetVal),
+			gen_tcp:close(Socket), 
 
-	gen_tcp:close(Socket), 
+			erlang:display(Peers),
 
-	erlang:display(Peers),
+			% call helper fun to upload File to every Peer in Peers
+			upload(FilePacket, Peers);
+		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+	end.
 
-	% call helper fun to upload File to every Peer in Peers
-	upload(FilePacket, Peers).
 
 init_download(MonitorIP, MonitorPort, File) ->
 	
@@ -106,27 +113,27 @@ init_download(MonitorIP, MonitorPort, File) ->
 
 	Hash = lookup_file(File),
 
-	% init tcp connection with monitor's server
-	Socket = connect(MonitorIP, MonitorPort),
-
 	% build init_download request packet
 	Packet = term_to_binary({download, node(), ServPid, Hash, MyIP}),
 
-	% send request to init_download
-	gen_tcp:send(Socket, Packet),
+	case connect(MonitorIP, MonitorPort) of
+		{ok, Socket} ->
+			% send request to init_upload
+			gen_tcp:send(Socket, Packet),
+			% catch return value
+			{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
-	% catch return value
-	{ok, RetVal} = gen_tcp:recv(Socket, 0),
+			% convert RetVal to list of Peers
+			Peers = binary_to_term(RetVal),
 
-	% convert RetVal to list of Peers
-	Peers = binary_to_term(RetVal),
+			gen_tcp:close(Socket), 
 
-	gen_tcp:close(Socket),
+			erlang:display(Peers),
 
-	erlang:display(Peers),
-
-	% call helper fun to download File from every Peer in Peers
-	download(Hash, Peers, File).
+			% call helper fun to download File from every Peer in Peers
+			download(Hash, Peers, File);
+		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+	end.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,8 +147,10 @@ local_ip_v4() ->
 
 connect(IP_address, Port) ->
 
-	{ok, Socket} = gen_tcp:connect(IP_address, Port, [binary, {packet, 4}, {active, false}]),
-	Socket.
+	case gen_tcp:connect(IP_address, Port, [binary, {packet, 4}, {active, false}]) of
+		{ok, Socket} -> {ok, Socket};
+		{error, Reason} -> {error, Reason}
+	end.
 
 upload(FilePacket, Peers) ->
 
@@ -153,8 +162,6 @@ upload(FilePacket, Peers) ->
 	% build upload request packet
 	Packet = term_to_binary({upload, Filename, Hash, Content}),
 
-	% TODO: write loop that connects client to each Peer in Peers
-	% and sends Packet to each Peer
 	upload_to_peer(Peers, Packet).
 
 
@@ -165,8 +172,6 @@ download(Hash, Peers, Filename) ->
 	% build download request packet
 	Packet = term_to_binary({download, Filename, Hash}),
 
-	% TODO: write loop that connects client to each Peer in Peers
-	% and sends Packet to each Peer
 	download_from_peer(Peers, Packet, Filename).
 
 upload_to_peer([], Packet) -> 0;

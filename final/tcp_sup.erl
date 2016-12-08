@@ -8,11 +8,7 @@
 -define(DEFAULT_PORT, 8099).
 
 start_link() ->
-	try supervisor:start_link({local, ?MODULE}, ?MODULE, []) of
-		Any -> Any
-	catch
-		_:_-> erlang:display('error, bad socket')
-	end.
+	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 start_link(Port, ParentPid) ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, ParentPid]).
 
