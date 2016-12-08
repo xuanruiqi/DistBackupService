@@ -14,6 +14,9 @@
 
 init_monitor([]) ->
 
+	% TODO: write fun to clear db if file already exists
+	% database:clear_table(),
+
 	init_monitor_dets(),
 
 	% register process

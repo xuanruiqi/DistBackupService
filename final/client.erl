@@ -52,6 +52,7 @@ logout(MonitorIP, MonitorPort) ->
 	ServPid = whereis(tcp_sup),
 
 	%% TODO: shut down server
+	%% exit(whereis(tcp_sup), kill),
 
 	case connect(MonitorIP, MonitorPort) of
 		{ok, Socket} ->
