@@ -1,0 +1,51 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -name ray2020 -setcookie cookie
+
+-import(client, [join/3, init_download/3]).
+-define(MONITOR_PORT, 8099).
+-define(SELF_PORT, 4598).
+
+main([Command | _]) -> 
+    case Command of
+        "start" -> join();
+        _       -> usage(),
+                   halt(1)
+    end;
+main([]) -> usage().
+
+join() -> 
+    case file:open("ip.conf", read) of
+                 {ok, ConfigFile} -> 
+                     IPRaw = io:get_line(ConfigFile, "~s"),
+                             % http://stackoverflow.com/questions/12794358/how-to-strip-all-blank-characters-in-a-string-in-erlang
+                             IP = re:replace(IPRaw, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
+                     case inet:parse_address(IP) of
+                          {ok, Tup}  -> Tup,
+                                        client:join(Tup, ?MONITOR_PORT, ?SELF_PORT),
+                                        loop(Tup);
+                          {error, _} -> io:format("Invalid IP address~n"),
+                                        halt(1)
+                     end;
+                     
+                 {error, _}  -> io:format("Error when reading config file~n"),
+                                halt(1)
+    end.
+
+loop(IPAddr) -> 
+    case io:fread("> ", "~s") of
+        "download" -> Filename = io:fread("Filename: ", "~s"),
+                      client:init_download(IPAddr, ?MONITOR_PORT, Filename),
+                      loop(IPAddr);
+        "upload"   -> Filename = io:fread("Filename: ", "~s"),
+                      client:init_upload(IPAddr, ?MONITOR_PORT, Filename),
+                      loop(IPAddr);
+        "logout"   -> client:logout(IPAddr, ?MONITOR_PORT),
+                      io:format("Bye!~n");
+        _          -> io:format("Enter \"upload\", \"download\", or \"logout\"~n"),
+                      loop(IPAddr)
+                  end.
+
+usage() -> 
+    io:format("Usage: client start~n"),
+    halt(1).
