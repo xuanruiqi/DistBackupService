@@ -41,7 +41,9 @@ join(MonitorIP, MonitorPort, MyPort) ->
 			gen_tcp:send(Socket, Packet),
 
 			gen_tcp:close(Socket);
-		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+		{error, Reason} -> 
+			erlang:display("You cannot connect to the monitor at this time."),
+			exit(whereis(tcp_sup), kill)
 	end.
 
 
@@ -71,42 +73,45 @@ init_upload(MonitorIP, MonitorPort, File) ->
 	MyIP = local_ip_v4(),
 
 	% build file packet
-	FilePacket = build_packet(File),
+	%FilePacket = build_packet(File),
 
-	% parse file packet to get Hash
-	{Filename, Hash, Content} = parse_packet(FilePacket),
+	case build_packet(File) of
+		nonexistent_file -> erlang:display("Your file does not exist");
+		FilePacket ->
+			% parse file packet to get Hash
+			{Filename, Hash, Content} = parse_packet(FilePacket),
 
-	add_file_to_table({Filename, Hash}),
+			add_file_to_table({Filename, Hash}),
 
-	% build init_upload request packet
-	Packet = term_to_binary({upload, node(), ServPid, Hash, MyIP}),
+			% build init_upload request packet
+			Packet = term_to_binary({upload, node(), ServPid, Hash, MyIP}),
 
-	case connect(MonitorIP, MonitorPort) of
-		{ok, Socket} ->
-			% send request to init_upload
-			gen_tcp:send(Socket, Packet),
-			% catch return value
-			{ok, RetVal} = gen_tcp:recv(Socket, 0),
+			case connect(MonitorIP, MonitorPort) of
+				{ok, Socket} ->
+					% send request to init_upload
+					gen_tcp:send(Socket, Packet),
+					% catch return value
+					{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
-			% convert RetVal to list of Peers
-			Peers = binary_to_term(RetVal),
+					% convert RetVal to list of Peers
+					Peers = binary_to_term(RetVal),
 
-			gen_tcp:close(Socket), 
+					gen_tcp:close(Socket), 
 
-			erlang:display(Peers),
+					erlang:display(Peers),
 
-			case Peers of 
-				[] -> 
-					erlang:display("There are no peers to accept uploads at this time.");
-				List -> 
+					case Peers of 
+						[] -> 
+							erlang:display("There are no peers to accept uploads at this time.");
+						List -> 
+							% call helper fun to upload File to every Peer in Peers
+							upload(FilePacket, Peers)
+					end;
+
 					% call helper fun to upload File to every Peer in Peers
-					upload(FilePacket, Peers)
-			end;
-
-			% call helper fun to upload File to every Peer in Peers
-			%upload(FilePacket, Peers);
-		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
-	end.
+					%upload(FilePacket, Peers);
+				{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
+			end.
 
 
 init_download(MonitorIP, MonitorPort, File) ->
@@ -222,7 +227,6 @@ download_from_peer([H | T], Packet, Filename) ->
 
 			erlang:display(RetVal =:= <<"Error: file not found">>),
 
-			% TODO: this exception handler is not working
 			case RetVal of
 				<<"Error: file not found">> -> 
 					erlang:display("peer does not have your file");
@@ -237,18 +241,6 @@ download_from_peer([H | T], Packet, Filename) ->
 						{error, Reason} -> erlang:display(Reason)
 					end
 			end;
-
-			%erlang:display(Filename),
-			%erlang:display(filename:basename(Filename)),
-			%erlang:display(filename:join(["./", filename:basename(Filename)])),
-
-			% write file
-			%Success = file:write_file(filename:basename(Filename), RetVal),
-
-			%case Success of
-			%	ok -> erlang:display("OK");
-			%	{error, Reason} -> erlang:display(Reason)
-			%end;
 
 		{error, Reason} -> 
 			erlang:display("You cannot connect to a peer."),
