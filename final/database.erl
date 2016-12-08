@@ -12,7 +12,7 @@
 	remove_client_from_database/1, print_all/0, clear_table/0]).
 
 % monitor_tcp_server funcs
--export([lookup_peers/1]).
+-export([lookup_peers/2]).
 
 % client funcs
 -export([init_client_dets/0, add_file_to_table/1, lookup_file/1]).
@@ -52,6 +52,9 @@ lookup_client(MonitorRef) ->
     end.
 
 remove_client_from_database(ClientNode) ->
+
+    erlang:display("removing client from db"),
+    erlang:display(ClientNode),
     open_table(monitor),
     dets:delete('Database', ClientNode).
 
@@ -69,12 +72,14 @@ clear_table() ->
 % MONITOR_TCP_SERVER DATABASE FUNCS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-lookup_peers(Self) ->
+lookup_peers(Self, ClientIP) ->
     erlang:display(Self),
     open_table(monitor),
 
     Peers = dets:foldr(fun (_E = {_,_,_, IP, Port}, Acc) ->  [{IP, Port}|Acc] end, [], 'Database'),
-    proplists:delete(Self, Peers).
+    erlang:display(Peers),
+    erlang:display(proplists:delete(ClientIP, Peers)),
+    proplists:delete(ClientIP, Peers).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CLIENT TABLE FUNCS

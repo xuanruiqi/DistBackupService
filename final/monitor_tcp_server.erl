@@ -2,7 +2,7 @@
 -behavior(gen_server).
 
 -import(file_proc, [parse_packet/1]).
--import(database, [lookup_peers/1]).
+-import(database, [lookup_peers/2]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -74,7 +74,7 @@ open_packet(Socket, {logout, ClientNode, ClientServPid}) ->
 	MonitorListener = whereis(listener),
 
 	MonitorListener ! {logout, ClientNode, ClientServPid};
-open_packet(Socket, {upload, ClientNode, ClientServPid, Hash}) ->
+open_packet(Socket, {upload, ClientNode, ClientServPid, Hash, ClientIP}) ->
 
 	erlang:display("client wants init upload!"),
 
@@ -83,15 +83,15 @@ open_packet(Socket, {upload, ClientNode, ClientServPid, Hash}) ->
 	% each element of the list  should look like: {IP_address, Port}
 	% Note: ClientNode's IP and Port should be excluded from this list
 
-	Peers = lookup_peers(ClientNode),
+	Peers = lookup_peers(ClientNode, ClientIP),
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers));
-open_packet(Socket, {download, ClientNode, ClientServPid, Hash}) ->
+open_packet(Socket, {download, ClientNode, ClientServPid, Hash, ClientIP}) ->
 
 	erlang:display("client wants init download!"),
 
-	Peers = lookup_peers(ClientNode),
+	Peers = lookup_peers(ClientNode, ClientIP),
 
 	% send Peers back to client
 	gen_tcp:send(Socket, term_to_binary(Peers)).

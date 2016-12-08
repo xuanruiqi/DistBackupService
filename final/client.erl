@@ -26,7 +26,7 @@ join(MonitorIP, MonitorPort, MyPort) ->
 			erlang:display(MyNewPort)
 	end,
 
-	% find my IP address and Port
+	% find my IP address
 	MyIP = local_ip_v4(),
 
 	% get pid of my server
@@ -34,9 +34,6 @@ join(MonitorIP, MonitorPort, MyPort) ->
 
 	% init tcp connection with monitor's server
 	Socket = connect(MonitorIP, MonitorPort),
-
-	%MyNewPort = inet:port(Socket),
-	%erlang:display(MyNewPort),
 
 	% build join request packet
 	Packet = term_to_binary({join, node(), pid_to_list(ServPid), MyIP, MyNewPort}),
@@ -66,21 +63,22 @@ init_upload(MonitorIP, MonitorPort, File) ->
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
+	% find my IP address
+	MyIP = local_ip_v4(),
+
 	% init tcp connection with monitor's server
 	Socket = connect(MonitorIP, MonitorPort),
 
 	% build file packet
-	% something is wrong in build_packet
 	FilePacket = build_packet(File),
 
 	% parse file packet to get Hash
 	{Filename, Hash, Content} = parse_packet(FilePacket),
 
 	add_file_to_table({Filename, Hash}),
-	% thats adds a new file record to the client's db
 
 	% build init_upload request packet
-	Packet = term_to_binary({upload, node(), ServPid, Hash}),
+	Packet = term_to_binary({upload, node(), ServPid, Hash, MyIP}),
 
 	% send request to logout
 	gen_tcp:send(Socket, Packet),
@@ -103,13 +101,16 @@ init_download(MonitorIP, MonitorPort, File) ->
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
+	% find my IP address
+	MyIP = local_ip_v4(),
+
 	Hash = lookup_file(File),
 
 	% init tcp connection with monitor's server
 	Socket = connect(MonitorIP, MonitorPort),
 
 	% build init_download request packet
-	Packet = term_to_binary({download, node(), ServPid, Hash}),
+	Packet = term_to_binary({download, node(), ServPid, Hash, MyIP}),
 
 	% send request to init_download
 	gen_tcp:send(Socket, Packet),

@@ -96,7 +96,7 @@ logout_client(client_left, ClientNode) ->
     erlang:display("CLIENT REQUESTED LOGOUT: logging out client"),
 
     % this doesn't work -> returns {error, notfound}
-    MonitorRef = lookup_client(ClientNode),
+    MonitorRef = lookup_monitor_ref(ClientNode),
 
     erlang:display(MonitorRef),
 
@@ -107,9 +107,10 @@ logout_client(client_left, ClientNode) ->
 logout_client(client_down, MonitorRef) ->
 
 	erlang:display("CLIENT DOWN: logging out client"),
+	erlang:display(MonitorRef),
 
 	% using client's MonitorRef
-	ClientNode = lookup_monitor_ref(MonitorRef),
+	ClientNode = lookup_client(MonitorRef),
 
 	remove_client_from_database(ClientNode).
 
