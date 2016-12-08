@@ -51,9 +51,6 @@ logout(MonitorIP, MonitorPort) ->
 	% get pid of my server
 	ServPid = whereis(tcp_sup),
 
-	%% TODO: shut down server
-	%% exit(whereis(tcp_sup), kill),
-
 	case connect(MonitorIP, MonitorPort) of
 		{ok, Socket} ->
 			% build join request packet
@@ -64,6 +61,9 @@ logout(MonitorIP, MonitorPort) ->
 			gen_tcp:close(Socket);
 		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
 	end.
+
+	%% TODO: shut down server
+	%exit(whereis(tcp_sup), kill).
 
 init_upload(MonitorIP, MonitorPort, File) ->
 
@@ -188,9 +188,6 @@ upload_to_peer([H | T], Packet) ->
 
 		{error, Reason} -> erlang:display("You cannot connect to a peer.")
 	end,
-	%Socket = connect(IP, Port), 
-	%gen_tcp:send(Socket, Packet),
-	%gen_tcp:close(Socket),
 	upload_to_peer(T, Packet).
 
 download_from_peer([], Packet, Filename) -> 0;
@@ -228,36 +225,6 @@ download_from_peer([H | T], Packet, Filename) ->
 
 
 
-
-
-
-
-
-
-	% Socket = connect(IP, Port), 
-	% gen_tcp:send(Socket, Packet),
-
-	% %wait for response
-	% {ok, RetVal} = gen_tcp:recv(Socket, 0),
-
-	% erlang:display("received my file from a peer!"),
-
-	% gen_tcp:close(Socket),
-
-
-	% erlang:display(Filename),
-	% erlang:display(filename:basename(Filename)),
-	% erlang:display(filename:join(["./", filename:basename(Filename)])),
-
-	% % write file
-	% Success = file:write_file(filename:basename(Filename), RetVal),
-
-	% case Success of
-	% 	ok -> erlang:display("OK");
-	% 	{error, Reason} -> erlang:display(Reason)
-	% end.
-
-	%download_from_peer(T, Packet, Filename).
 
 
 

@@ -3,7 +3,7 @@
 
 -import(monitor_tcp_sup, [start_link/0, start_link/1]).
 -import(database, [init_monitor_dets/0, add_client/1, lookup_monitor_ref/1,
-			lookup_client/1, remove_client_from_database/1]).
+			lookup_client/1, remove_client_from_database/1, clear_table/0]).
 
 -export([init_monitor/1]).
 
@@ -14,8 +14,7 @@
 
 init_monitor([]) ->
 
-	% TODO: write fun to clear db if file already exists
-	% database:clear_table(),
+	database:clear_table(),
 
 	init_monitor_dets(),
 
@@ -58,7 +57,7 @@ listen() ->
 			connect_client(ClientNode, ClientServPid, ClientIP, ClientPort),
 			listen();
 		{logout, ClientNode, ClientServPid} ->
-			logout_client(client_left, ClientNode),
+			logout_client(client_left, ClientNode, ClientServPid),
 			listen();
 		{'DOWN', MonitorRef, Type, Object, Info} ->
 			logout_client(client_down, MonitorRef),
@@ -94,18 +93,20 @@ connect_client(ClientNode, ClientServPid, ClientIP, ClientPort) ->
 	add_client(DatabaseEntry).
 
 
-logout_client(client_left, ClientNode) ->
+logout_client(client_left, ClientNode, ClientServPid) ->
 
     erlang:display("CLIENT REQUESTED LOGOUT: logging out client"),
 
-    % this doesn't work -> returns {error, notfound}
     MonitorRef = lookup_monitor_ref(ClientNode),
 
     erlang:display(MonitorRef),
 
     remove_client_from_database(ClientNode),
     
-	demonitor(MonitorRef);
+	demonitor(MonitorRef),
+
+	% tell client to kill his server
+	rpc:call(ClientNode, erlang, exit, [ClientServPid, kill]).
 
 logout_client(client_down, MonitorRef) ->
 
