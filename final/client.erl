@@ -214,21 +214,34 @@ download_from_peer([H | T], Packet, Filename) ->
 			%wait for response
 			{ok, RetVal} = gen_tcp:recv(Socket, 0),
 
-			erlang:display("received my file from a peer!"),
+			erlang:display("received a packet from a peer!"),
 
 			gen_tcp:close(Socket),
 
-			erlang:display(Filename),
-			erlang:display(filename:basename(Filename)),
-			erlang:display(filename:join(["./", filename:basename(Filename)])),
+			case RetVal of
+				"Error: file not found" -> 
+					erlang:display("peer does not have your file");
+				MyFile -> 
+					% write file
+					Success = file:write_file(filename:basename(Filename), RetVal),
+
+					case Success of
+						ok -> erlang:display("OK");
+						{error, Reason} -> erlang:display(Reason)
+					end
+			end;
+
+			%erlang:display(Filename),
+			%erlang:display(filename:basename(Filename)),
+			%erlang:display(filename:join(["./", filename:basename(Filename)])),
 
 			% write file
-			Success = file:write_file(filename:basename(Filename), RetVal),
+			%Success = file:write_file(filename:basename(Filename), RetVal),
 
-			case Success of
-				ok -> erlang:display("OK");
-				{error, Reason} -> erlang:display(Reason)
-			end;
+			%case Success of
+			%	ok -> erlang:display("OK");
+			%	{error, Reason} -> erlang:display(Reason)
+			%end;
 
 		{error, Reason} -> 
 			erlang:display("You cannot connect to a peer."),
