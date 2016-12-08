@@ -224,7 +224,7 @@ download_from_peer([H | T], Packet, Filename) ->
 
 			% TODO: this exception handler is not working
 			case RetVal of
-				<<"Error: file not found"/binary>> -> 
+				<<"Error: file not found">> -> 
 					erlang:display("peer does not have your file");
 				MyFile -> 
 					% write file
