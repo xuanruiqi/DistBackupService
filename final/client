@@ -1,12 +1,14 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -name ray2020 -setcookie cookie
+%%! -name ray2020@127.0.0.1 -setcookie cookie verbose debug
 
 -import(client, [join/3, init_download/3]).
 -define(MONITOR_PORT, 8099).
 -define(SELF_PORT, 4598).
+-mode(compile).
 
 main([Command | _]) -> 
+    erlang:set_cookie(node(), cookie),
     case Command of
         "start" -> join();
         _       -> usage(),
