@@ -62,9 +62,6 @@ logout(MonitorIP, MonitorPort) ->
 		{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
 	end.
 
-	%% TODO: shut down server
-	%exit(whereis(tcp_sup), kill).
-
 init_upload(MonitorIP, MonitorPort, File) ->
 
 	% get pid of my server
