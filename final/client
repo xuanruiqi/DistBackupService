@@ -1,6 +1,5 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! verbose debug
 
 -import(client, [join/3, init_download/3]).
 -define(MONITOR_PORT, 8099).
@@ -36,18 +35,18 @@ join() ->
     end.
 
 loop(IPAddr) -> 
-    case io:fread("> ", "~s") of
-        "download" -> Filename = io:fread("Filename: ", "~s"),
-                      client:init_download(IPAddr, ?MONITOR_PORT, Filename),
-                      loop(IPAddr);
-        "upload"   -> Filename = io:fread("Filename: ", "~s"),
-                      client:init_upload(IPAddr, ?MONITOR_PORT, Filename),
-                      loop(IPAddr);
-        "logout"   -> client:logout(IPAddr, ?MONITOR_PORT),
-                      io:format("Bye!~n");
-        _          -> io:format("Enter \"upload\", \"download\", or \"logout\"~n"),
-                      loop(IPAddr)
-                  end.
+    case io:get_line("> ") of
+        "download~n" -> Filename = io:fread("Filename: ", "~s"),
+                        client:init_download(IPAddr, ?MONITOR_PORT, Filename),
+                        loop(IPAddr);
+        "upload~n"   -> Filename = io:fread("Filename: ", "~s"),
+                        client:init_upload(IPAddr, ?MONITOR_PORT, Filename),
+                        loop(IPAddr);
+        "logout~n"   -> client:logout(IPAddr, ?MONITOR_PORT),
+                        io:format("Bye!~n");
+        _            -> io:format("Enter \"upload\", \"download\", or \"logout\"~n"),
+                        loop(IPAddr)
+    end.
 
 usage() -> 
     io:format("Usage: client start~n"),
