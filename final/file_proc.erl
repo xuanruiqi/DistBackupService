@@ -42,12 +42,12 @@ pack_file_name(Filename) ->
 
 build_packet(Filename) ->
     case read(Filename) of
+        error   -> 
+            nonexistent_file;
         Content -> 
             Fname = pack_file_name(Filename),
             Hash  = md5(Content),
-            <<Fname/binary, Hash/binary, Content/binary>>;
-        error   -> 
-            nonexistent_file
+            <<Fname/binary, Hash/binary, Content/binary>>
     end.
     
 
