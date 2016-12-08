@@ -1,6 +1,6 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -name ray2020@127.0.0.1 -setcookie cookie verbose debug
+%%! -name ray2020 verbose debug
 
 -import(client, [join/3, init_download/3]).
 -define(MONITOR_PORT, 8099).
