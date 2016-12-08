@@ -111,7 +111,8 @@ init_upload(MonitorIP, MonitorPort, File) ->
 					% call helper fun to upload File to every Peer in Peers
 					%upload(FilePacket, Peers);
 				{error, Reason} -> erlang:display("You cannot connect to the monitor at this time.")
-			end.
+			end
+    end.
 
 
 init_download(MonitorIP, MonitorPort, File) ->
