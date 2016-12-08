@@ -1,6 +1,6 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -name ray2020 verbose debug
+%%! verbose debug
 
 -import(client, [join/3, init_download/3]).
 -define(MONITOR_PORT, 8099).
@@ -8,6 +8,7 @@
 -mode(compile).
 
 main([Command | _]) -> 
+    {ok, _} = net_kernel:start(['ray2020', longnames]),
     erlang:set_cookie(node(), cookie),
     case Command of
         "start" -> join();
