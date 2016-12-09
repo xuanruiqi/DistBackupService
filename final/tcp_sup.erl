@@ -7,76 +7,79 @@
 -define(SERVER, ?MODULE).
 -define(DEFAULT_PORT, 8099).
 
+%%
+%% Start TCP supervisor. If called with arity 2, start with custom 
+%% port.
+%%
 start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 start_link(Port, ParentPid) ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, ParentPid]).
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, ParentPid]).
 
+
+%%
+%% Initialize the TCP supervisor
+%%
 init([]) ->
+    case gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]) of
+        {ok, ListenSocket} -> 
+            %% We start our pool of empty listeners.
+            %% We must do this in another, as it is a blocking process.
+            spawn_link(fun empty_listeners/0),
+            SupFlags = #{strategy => simple_one_for_one,
+                        intensity => 60,
+                        period => 3600},
+            ChildSpecs = [#{id => tcp_server,
+                            start => {tcp_server, start_link, [ListenSocket]},
+                            restart => temporary,
+                            type => worker,
+                            shutdown => 1000,
+                            modules => [tcp_server]}],
 
+            {ok, {SupFlags, ChildSpecs}};
+        {error, Reason} -> 
+            init([?DEFAULT_PORT - 1])
+    end;
 
-	% {ok, ListenSocket} = gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]),
-
-	case gen_tcp:listen(?DEFAULT_PORT, [{active, true}, binary, {packet, 4}]) of
-		{ok, ListenSocket} -> 
-			%% We start our pool of empty listeners.
-			%% We must do this in another, as it is a blocking process.
-
-			spawn_link(fun empty_listeners/0),
-
-			SupFlags = #{strategy => simple_one_for_one,
-						intensity => 60,
-						period => 3600},
-			ChildSpecs = [#{id => tcp_server,
-							start => {tcp_server, start_link, [ListenSocket]},
-							restart => temporary,
-							type => worker,
-							shutdown => 1000,
-							modules => [tcp_server]}],
-
-			{ok, {SupFlags, ChildSpecs}};
-		{error, Reason} -> 
-			erlang:display("port bad"),
-			init([?DEFAULT_PORT - 1])
-	end;
-
-
+%%
+%% Initialization for custom ports
+%%
 init([Port, ParentPid]) ->
 
-	case gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]) of
-		{ok, ListenSocket} -> 
+    case gen_tcp:listen(Port, [{active, true}, binary, {packet, 4}]) of
+        {ok, ListenSocket} -> 
+            %% When we have successfully started a listener on Port, 
+            %% send Port back to ParentPid
+            ParentPid ! Port,
+            %% We start our pool of empty listeners.
+            %% We must do this in another, as it is a blocking process.
+            spawn_link(fun empty_listeners/0),
+            SupFlags = #{strategy => simple_one_for_one,
+                        intensity => 60,
+                        period => 3600},
+            ChildSpecs = [#{id => tcp_server,
+                            start => {tcp_server, start_link, [ListenSocket]},
+                            restart => temporary,
+                            type => worker,
+                            shutdown => 1000,
+                            modules => [tcp_server]}],
 
-			%% When we have successfully started a listener on Port, 
-			%% send Port back to ParentPid
-			ParentPid ! Port,
-			%% We start our pool of empty listeners.
-			%% We must do this in another, as it is a blocking process.
+            {ok, {SupFlags, ChildSpecs}};
+        {error, Reason} -> 
+            init([Port - 1, ParentPid])
+    end.
 
-			spawn_link(fun empty_listeners/0),
 
-			SupFlags = #{strategy => simple_one_for_one,
-						intensity => 60,
-						period => 3600},
-			ChildSpecs = [#{id => tcp_server,
-							start => {tcp_server, start_link, [ListenSocket]},
-							restart => temporary,
-							type => worker,
-							shutdown => 1000,
-							modules => [tcp_server]}],
-
-			{ok, {SupFlags, ChildSpecs}};
-		{error, Reason} -> 
-			erlang:display("port bad"),
-			init([Port - 1, ParentPid])
-	end.
-
+%%
+%% Start a socket
+%%
 start_socket() ->
-	supervisor:start_child(?MODULE, []).
+    supervisor:start_child(?MODULE, []).
 
-
+%%
 %% Spawn 20 listeners so that many multiple connections can
 %% be started at once
+%%
 empty_listeners() ->
-	erlang:display("SUPERVISOR: spawning 20 child acceptors"),
-	[start_socket() || _ <- lists:seq(1,20)],
-	ok.
+    [start_socket() || _ <- lists:seq(1,20)],
+    ok.

@@ -7,6 +7,9 @@
 -define(SELF_PORT, 8098).
 -mode(compile).
 
+%%
+%% Run the client
+%%
 main([Command | _]) -> 
     case Command of
         "start" -> join();
@@ -15,11 +18,15 @@ main([Command | _]) ->
     end;
 main([]) -> usage().
 
+
+%%
+%% Join the cluster
+%%
 join() -> 
     case file:open("ip.conf", read) of
                 {ok, ConfigFile} -> 
                     IPRaw = io:get_line(ConfigFile, "~s"),
-                             % http://stackoverflow.com/questions/12794358/how-to-strip-all-blank-characters-in-a-string-in-erlang
+                            % http://stackoverflow.com/questions/12794358/how-to-strip-all-blank-characters-in-a-string-in-erlang
                             IP = re:replace(IPRaw, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
                     case inet:parse_address(IP) of
                           	{ok, MonitorIP}  -> MonitorIP,
@@ -33,6 +40,9 @@ join() ->
                                 halt(1)
     end.
 
+%%
+%% Loop & wait for user to request upload, download or login.
+%%
 loop(IPAddr) -> 
     case io:get_line("> ") of
         "download\n" -> RawFilename = io:get_line("Filename: "),
@@ -51,6 +61,9 @@ loop(IPAddr) ->
                         loop(IPAddr)
     end.
 
+%%
+%% Show usage
+%%
 usage() -> 
     io:format("Usage: client start~n"),
     halt(1).

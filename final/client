@@ -3,7 +3,7 @@
 
 -import(client, [join/3, init_download/3, init_upload/3]).
 -define(MONITOR_PORT, 8099).
--define(SELF_PORT, 4598).
+-define(SELF_PORT, 10293).
 -mode(compile).
 
 main([Command | _]) -> 

@@ -8,11 +8,18 @@
 
 -record(state, {socket}).
 
+%%
+%% Start a TCP server
+%%
 start_link(Socket) ->
 
     % server name is ?MODULE
     gen_server:start_link(?MODULE, Socket, []).
 
+
+%%
+%% Initialize a TCP server
+%%
 init(Socket) ->
 
     %% Start accepting requests
@@ -20,30 +27,31 @@ init(Socket) ->
     gen_server:cast(self(), accept),
     {ok, #state{socket=Socket}}.
 
+
+%%
+%% Stop a TCP server
+%%
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%% Handle a connection
+%%
 handle_cast(accept, State = #state{socket=ListenSocket}) ->
 
     {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
-    erlang:display("connection received!"),
-    %% Boot a new listener to replace this one.
     tcp_sup:start_socket(),
     {noreply, State#state{socket=AcceptSocket}};
 handle_cast(_, State) ->
     {noreply, State}.
 
+%%
+%% Handle peer packets
+%%
 handle_info({tcp, Socket, <<"quit", _/binary>>}, State) ->
     gen_tcp:close(Socket),
     {stop, normal, State};
-%% test
-handle_info({tcp, Socket, <<"hello", _/binary>>}, State) ->
-    %% send back a greeting message
-    send(Socket, "why hello there!", []),
-    {noreply, State};
 handle_info({tcp, Socket, Packet}, State) ->
-    erlang:display("received packet from client"),
-    %erlang:display(binary_to_term(Packet)),
     open_packet(Socket, binary_to_term(Packet)),
     {noreply, State};
 handle_info({tcp_closed, _Socket}, State) -> {stop, normal, State};
@@ -52,16 +60,23 @@ handle_info(E, State) ->
     io:fwrite("unexpected: ~p~n", [E]),
     {noreply, State}.
 
+%%
+%% Not implemented
+%%
 handle_call(_E, _From, State) -> {noreply, State}.
 terminate(_Reason, _Tab) -> ok.
 code_change(_OldVersion, Tab, _Extra) -> {ok, Tab}.
 
 
+%%
+%% Handle upload request from a peer
+%%
 open_packet(Socket, {upload, Filename, Hash, Content}) ->
+    write_peer_file(filename:basename(Filename), Content);
 
-	erlang:display("client wants upload his file!"),
-	write_peer_file(filename:basename(Filename), Content);
-
+%%
+%% Handle download request from a peer
+%%
 open_packet(Socket, {download, Filename, Hash}) ->
     erlang:display("client wants download his file!"), 
     io:fwrite("Hash: ~p~n", [Hash]),
@@ -87,7 +102,6 @@ open_packet(Socket, {download, Filename, Hash}) ->
             Packet = "Error: no files uploaded yet",
             gen_tcp:send(Socket, Packet)
     end.
-
 
 decode_packet(Packet) -> 
     io:fwrite("Decoding packet~n", []),
