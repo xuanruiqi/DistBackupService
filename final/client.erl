@@ -82,9 +82,6 @@ init_upload(MonitorIP, MonitorPort, File) ->
     % find my IP address
     MyIP = local_ip_v4(),
 
-    % build file packet
-    %FilePacket = build_packet(File),
-
     case build_packet(File) of
         nonexistent_file -> 
             io:format("Your file does not exist~n");

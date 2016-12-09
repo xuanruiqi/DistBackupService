@@ -52,9 +52,6 @@ lookup_client(MonitorRef) ->
     end.
 
 remove_client_from_database(ClientNode) ->
-
-    erlang:display("removing client from db"),
-    erlang:display(ClientNode),
     open_table(monitor),
     dets:delete('Database', ClientNode).
 
@@ -73,12 +70,9 @@ clear_table() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 lookup_peers(Self, ClientIP) ->
-    erlang:display(Self),
     open_table(monitor),
 
     Peers = dets:foldr(fun (_E = {_,_,_, IP, Port}, Acc) ->  [{IP, Port}|Acc] end, [], 'Database'),
-    erlang:display(Peers),
-    erlang:display(proplists:delete(ClientIP, Peers)),
     proplists:delete(ClientIP, Peers).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
